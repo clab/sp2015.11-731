@@ -9,18 +9,13 @@ optparser.add_option("-n", "--num_display", dest="n", default=sys.maxint, type="
 (opts, args) = optparser.parse_args()
 
 (size_a, size_s, size_a_and_s, size_a_and_p) = (0.0,0.0,0.0,0.0)
-bitext = open(opts.bitext)
-for _ in range(150):
-  _ = bitext.readline()
-  _ = sys.stdin.readline()
-for (i, (f_e, g, a)) in enumerate(zip(bitext, open(opts.alignment), sys.stdin)):
+for (i, (f_e, g, a)) in enumerate(zip(open(opts.bitext), open(opts.alignment), sys.stdin)):
   (f, e) = f_e.split(' ||| ')
   fwords = f.strip().split()
   ewords = e.strip().split()
   sure = set([tuple(map(int, x.split("-"))) for x in filter(lambda x: x.find("-") > -1, g.strip().split())])
   possible = set([tuple(map(int, x.split("?"))) for x in filter(lambda x: x.find("?") > -1, g.strip().split())])
   alignment = set([tuple(map(int, x.split("-"))) for x in a.strip().split()])
-  assert len(sure & possible) == 0, (g, sure & possible)
   size_a += len(alignment)
   size_s += len(sure)
   size_a_and_s += len(alignment & sure)
@@ -50,12 +45,9 @@ for (i, (f_e, g, a)) in enumerate(zip(bitext, open(opts.alignment), sys.stdin)):
       sys.stdout.write("\n")
     sys.stdout.write("\n")
 
-def SafeDiv(a, b):
-  return 0.0 if b == 0.0 else a/b
-
-precision = SafeDiv(size_a_and_p, size_a)
-recall = SafeDiv(size_a_and_s, size_s)
-aer = 1 - SafeDiv(size_a_and_s + size_a_and_p, size_a + size_s)
+precision = size_a_and_p / size_a
+recall = size_a_and_s / size_s
+aer = 1 - ((size_a_and_s + size_a_and_p) / (size_a + size_s))
 sys.stdout.write("Precision = %f\nRecall = %f\nAER = %f\n" % (precision, recall, aer))
 
 for _ in (sys.stdin): # avoid pipe error
